@@ -46,6 +46,7 @@ cron.schedule('*/10 * * * *', () => {
       extClient.terminate()
     }
 
+    extClient.isAlive = false
     extClient.ping()
   })
 })
