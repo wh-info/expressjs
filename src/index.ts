@@ -1,27 +1,52 @@
-import cors from 'cors'
-import express from 'express'
-import helmet from 'helmet'
-import morgan from 'morgan'
+import http from 'http'
+import cron from 'node-cron'
+import WebSocket, { WebSocketServer } from 'ws'
 
-import './ws'
+import { getKillCount } from './redis'
+import WebSocketWithHeartbeat from './types/ws'
 
-const app = express()
+import './zKillListener'
+
 const port = process.env.PORT || 3333
 
-app.use(morgan('dev'))
+const server = http.createServer()
+const wss = new WebSocketServer({ server })
 
-app.use(helmet())
-app.use(
-  cors({
-    origin: process.env.NODE_ENV === 'production' ? 'wh-info.github.io' : '*',
-    optionsSuccessStatus: 200,
-  })
-)
+function heartbeat(this: WebSocket) {
+  const client = this as WebSocketWithHeartbeat
+  client.isAlive = true
+}
 
-app.get('/', async (req, res) => {
-  res.json({ Hello: 'World' })
+wss.on('connection', async (ws) => {
+  const killCount = await getKillCount()
+  ws.on('pong', heartbeat)
+  ws.send(killCount)
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+// Update all clients with the latest kill count every five minutes
+cron.schedule('*/5 * * * *', async () => {
+  const killCount = await getKillCount()
+
+  wss.clients.forEach((client) => {
+    client.send(killCount, () => {
+      client.terminate()
+    })
+  })
+})
+
+// Check for unhealthy clients every 10 minutes
+cron.schedule('*/10 * * * *', () => {
+  wss.clients.forEach((client) => {
+    const extClient = client as WebSocketWithHeartbeat
+    if (extClient.isAlive) {
+      extClient.ping()
+    } else {
+      console.warn('Disconnecting client, failed hearbeat check.')
+      extClient.terminate()
+    }
+  })
+})
+
+server.listen(port, () => {
+  console.log(`Listening at http://localhost:${port}`)
 })
