@@ -18,7 +18,4 @@ ws.addEventListener('open', () => {
   console.info('Connected to Zkill')
 })
 
-ws.addEventListener('message', () => {
-  console.info('Received kill from zKill')
-  recordKill()
-})
+ws.addEventListener('message', recordKill)
