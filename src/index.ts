@@ -20,8 +20,11 @@ function heartbeat(this: WebSocket) {
 // On connect, immediately send the kill count and establish a heartbeat
 wss.on('connection', async (ws) => {
   const killCount = await getKillCount()
-  ws.on('pong', heartbeat)
-  ws.send(killCount)
+  const extWs = ws as WebSocketWithHeartbeat
+
+  extWs.isAlive = true
+  extWs.on('pong', heartbeat)
+  extWs.send(killCount)
 })
 
 // Update all clients with the latest kill count every five minutes
@@ -41,12 +44,13 @@ cron.schedule('*/5 * * * *', async () => {
 cron.schedule('*/10 * * * *', () => {
   wss.clients.forEach((client) => {
     const extClient = client as WebSocketWithHeartbeat
-    if (extClient.isAlive) {
-      extClient.ping()
-    } else {
+
+    if (!extClient.isAlive) {
       console.warn('Disconnecting client, failed hearbeat check.')
       extClient.terminate()
     }
+
+    extClient.ping()
   })
 })
 
