@@ -17,6 +17,7 @@ function heartbeat(this: WebSocket) {
   client.isAlive = true
 }
 
+// On connect, immediately send the kill count and establish a heartbeat
 wss.on('connection', async (ws) => {
   const killCount = await getKillCount()
   ws.on('pong', heartbeat)
