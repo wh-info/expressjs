@@ -29,8 +29,10 @@ cron.schedule('*/5 * * * *', async () => {
   const killCount = await getKillCount()
 
   wss.clients.forEach((client) => {
-    client.send(killCount, () => {
-      client.terminate()
+    client.send(killCount, (err) => {
+      if (err) {
+        client.terminate()
+      }
     })
   })
 })
