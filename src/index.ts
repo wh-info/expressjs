@@ -1,8 +1,4 @@
-import cors from 'cors'
-import express from 'express'
-import helmet from 'helmet'
 import http from 'http'
-import morgan from 'morgan'
 import cron from 'node-cron'
 import WebSocket, { WebSocketServer } from 'ws'
 
@@ -11,14 +7,9 @@ import WebSocketWithHeartbeat from './types/ws'
 
 import './zKillListener'
 
-const app = express()
 const port = process.env.PORT || 3333
 
-app.use(helmet())
-app.use(morgan('dev'))
-app.use(cors())
-
-const server = http.createServer(app)
+const server = http.createServer()
 const wss = new WebSocketServer({ server })
 
 function heartbeat(this: WebSocket) {
