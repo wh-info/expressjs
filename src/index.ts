@@ -1,17 +1,27 @@
-import bodyParser from "body-parser";
-import express from "express";
+import cors from 'cors'
+import express from 'express'
+import helmet from 'helmet'
+import morgan from 'morgan'
 
-const app = express();
-const port = process.env.PORT || 3333;
+import './ws'
 
-app.use(bodyParser.json());
-app.use(bodyParser.raw({ type: "application/vnd.custom-type" }));
-app.use(bodyParser.text({ type: "text/html" }));
+const app = express()
+const port = process.env.PORT || 3333
 
-app.get("/", async (req, res) => {
-  res.json({ Hello: "World" });
-});
+app.use(morgan('dev'))
+
+app.use(helmet())
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === 'production' ? 'wh-info.github.io' : '*',
+    optionsSuccessStatus: 200,
+  })
+)
+
+app.get('/', async (req, res) => {
+  res.json({ Hello: 'World' })
+})
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
+  console.log(`Example app listening at http://localhost:${port}`)
+})
