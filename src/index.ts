@@ -29,11 +29,14 @@ wss.on('connection', async (ws) => {
 
 // Update all clients with the latest kill count every five minutes
 cron.schedule('*/5 * * * *', async () => {
-  const killCount = await getKillCount()
-
-  wss.clients.forEach((client) => {
-    client.send(killCount)
-  })
+  // Don't bother querying redis if there are no clients
+  if (wss.clients.size) {
+    const killCount = await getKillCount()
+    wss.clients.forEach((client) => {
+      const extWs = client as WebSocketWithHeartbeat
+      extWs.send(killCount)
+    })
+  }
 })
 
 // Check for unhealthy clients every 10 minutes
