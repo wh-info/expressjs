@@ -1,6 +1,8 @@
 import Redis from 'ioredis'
 import { v4 as uuid } from 'uuid'
 
+import store from './store'
+
 const redisUrl = process.env.REDIS_URL as string
 const redis = new Redis(redisUrl, {
   password: process.env.REDIS_PASSWORD,
@@ -11,5 +13,8 @@ const redis = new Redis(redisUrl, {
 
 export const getKillCount = () => redis.keys('*').then((keys) => keys.length)
 
-export const recordKill = () => redis.set(uuid(), 1, 'EX', 60 * 60 * 24)
+export const recordKill = () => {
+  store.killCount++
+  redis.set(uuid(), 1, 'EX', 60 * 60 * 24)
+}
 export default redis
