@@ -1,5 +1,4 @@
 import http from 'http'
-import cron from 'node-cron'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { getKillCount } from './redis'
@@ -27,32 +26,25 @@ wss.on('connection', async (ws) => {
   extWs.send(killCount)
 })
 
-// Update all clients with the latest kill count every five minutes
-cron.schedule('*/5 * * * *', async () => {
-  // Don't bother querying redis if there are no clients
+// Update all clients with the latest kill count every thirty seconds
+setInterval(async () => {
   if (wss.clients.size) {
     const killCount = await getKillCount()
     wss.clients.forEach((client) => {
-      const extWs = client as WebSocketWithHeartbeat
-      extWs.send(killCount)
+      const extClient = client as WebSocketWithHeartbeat
+
+      extClient.send(killCount)
+
+      if (!extClient.isAlive) {
+        console.warn('Disconnecting client, failed hearbeat check.')
+        extClient.terminate()
+      }
+
+      extClient.isAlive = false
+      extClient.ping()
     })
   }
-})
-
-// Check for unhealthy clients every 10 minutes
-cron.schedule('*/10 * * * *', () => {
-  wss.clients.forEach((client) => {
-    const extClient = client as WebSocketWithHeartbeat
-
-    if (!extClient.isAlive) {
-      console.warn('Disconnecting client, failed hearbeat check.')
-      extClient.terminate()
-    }
-
-    extClient.isAlive = false
-    extClient.ping()
-  })
-})
+}, 30000)
 
 server.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`)

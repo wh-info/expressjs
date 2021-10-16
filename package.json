@@ -16,14 +16,12 @@
     "cors": "^2.8.5",
     "fast-json-stable-stringify": "^2.1.0",
     "ioredis": "^4.28.0",
-    "node-cron": "^3.0.0",
     "uuid": "^8.3.2",
     "ws": "^8.2.3"
   },
   "devDependencies": {
     "@types/ioredis": "^4.27.7",
     "@types/node": "^16.11.0",
-    "@types/node-cron": "^3.0.0",
     "@types/ws": "^8.2.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
