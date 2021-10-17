@@ -2,7 +2,6 @@ import http from 'http'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { getKillCount } from './redis'
-import store from './store'
 import WebSocketWithHeartbeat from './types/ws'
 
 import './zKillListener'
@@ -17,26 +16,26 @@ function heartbeat(this: WebSocket) {
   client.isAlive = true
 }
 
-server.once('listening', async () => {
-  store.killCount = await getKillCount()
-})
-
 // On connect, immediately send the kill count and establish a heartbeat
-wss.on('connection', (ws) => {
+wss.on('connection', async (ws) => {
   const extWs = ws as WebSocketWithHeartbeat
+
+  const killCount = await getKillCount()
 
   extWs.isAlive = true
   extWs.on('pong', heartbeat)
-  extWs.send(store.killCount)
+  extWs.send(killCount)
 })
 
 // Update all clients with the latest kill count every thirty seconds
-setInterval(() => {
+setInterval(async () => {
   if (wss.clients.size) {
+    const killCount = await getKillCount()
+
     wss.clients.forEach((client) => {
       const extClient = client as WebSocketWithHeartbeat
 
-      extClient.send(store.killCount)
+      extClient.send(killCount)
 
       if (!extClient.isAlive) {
         console.warn('Disconnecting client, failed hearbeat check.')
