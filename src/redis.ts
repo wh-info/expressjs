@@ -11,7 +11,6 @@ const redis = new Redis(redisUrl, {
 
 export const getKillCount = () => redis.keys('*').then((keys) => keys.length)
 
-export const recordKill = () => {
-  redis.set(uuid(), 1, 'EX', 60 * 60 * 24)
-}
+export const recordKill = () => redis.set(uuid(), 1, 'EX', 60 * 60 * 24)
+
 export default redis
