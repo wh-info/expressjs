@@ -18,8 +18,6 @@ const listen = () => {
       setTimeout(() => {
         ws.send(payload)
       }, 500 * idx)
-
-      ws.send(payload)
     })
 
     console.info('Connected to Zkill')
