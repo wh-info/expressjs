@@ -8,14 +8,20 @@ const listen = () => {
   const ws = new WebSocket('wss://zkillboard.com/websocket/')
 
   ws.addEventListener('open', () => {
-    WormholeRegionIds.forEach((regionId) => {
+    WormholeRegionIds.forEach((regionId, idx) => {
       const payload = stringify({
         action: 'sub',
         channel: `region:${regionId}`,
       })
 
+      // So we don't overwhelm the server immediately after connect
+      setTimeout(() => {
+        ws.send(payload)
+      }, 500 * idx)
+
       ws.send(payload)
     })
+
     console.info('Connected to Zkill')
   })
 
