@@ -49,7 +49,7 @@ setInterval(async () => {
 }, 30000)
 
 // Serve 404s on HTTP(S) requests
-server.on('request', (req, res) => res.writeHead(404).end())
+server.on('request', (req, res) => res.writeHead(200).end())
 
 server.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`)
